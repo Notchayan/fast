@@ -81,6 +81,8 @@ def auth(user: UserAuth):
             session_id = create_session_id(user.username, hashed_password)
             return {"session_id": session_id}
     
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect login credentials.")
 
 @app.post("/add-referral/")
 def add_referral(session_id: str, referral: Referral):
@@ -122,4 +124,3 @@ def convert_referral_to_money(session_id: str):
         raise HTTPException(status_code=400, detail="Invalid session ID or no referral score.")
 
 # To run the application, use the command: `uvicorn filename:app --reload`
-
