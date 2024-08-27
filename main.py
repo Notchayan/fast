@@ -37,21 +37,27 @@ def get_session_id(username: str, hashed_password: str) -> str:
     return sessions.get(f"{hashed_password}{username}")
 
 # Endpoints
+@app.post("/register/")
+def register(user: UserAuth):
+    if user.username in users:
+        raise HTTPException(status_code=400, detail="Username already exists.")
+    
+    hashed_password = hash_password(user.password)
+    users[user.username] = hashed_password
+    session_id = create_session_id(user.username, hashed_password)
+    active_referrals[session_id] = []
+    balance_of_user[session_id] = 0.0
+    referral_score_for_user[session_id] = 0
+    return {"session_id": session_id}
+
 @app.post("/auth/")
 def auth(user: UserAuth):
     hashed_password = hash_password(user.password)
     
     if user.username not in users:
-        # New user registration
-        users[user.username] = hashed_password
-        session_id = create_session_id(user.username, hashed_password)
-        active_referrals[session_id] = []
-        balance_of_user[session_id] = 0.0
-        referral_score_for_user[session_id] = 0
-        return {"session_id": session_id}
+        raise HTTPException(status_code=400, detail="User not found. Please register first.")
     
-    elif users[user.username] == hashed_password:
-        # Existing user login
+    if users[user.username] == hashed_password:
         session_id = get_session_id(user.username, hashed_password)
         if session_id:
             return {"session_id": session_id}
