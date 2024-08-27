@@ -3,8 +3,24 @@ from pydantic import BaseModel
 from typing import Dict, List
 from hashlib import sha256
 from uuid import uuid4
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Allow CORS for your frontend origin
+origins = [
+    "http://127.0.0.1:5500",  # Local development origin
+    "http://localhost:5500",  # Local development origin
+    "http://your-frontend-domain.com"  # Replace with your actual frontend domain if deployed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Databases (in-memory for simplicity)
 users: Dict[str, str] = {}
@@ -65,8 +81,6 @@ def auth(user: UserAuth):
             session_id = create_session_id(user.username, hashed_password)
             return {"session_id": session_id}
     
-    else:
-        raise HTTPException(status_code=400, detail="Incorrect login.")
 
 @app.post("/add-referral/")
 def add_referral(session_id: str, referral: Referral):
@@ -108,3 +122,4 @@ def convert_referral_to_money(session_id: str):
         raise HTTPException(status_code=400, detail="Invalid session ID or no referral score.")
 
 # To run the application, use the command: `uvicorn filename:app --reload`
+
